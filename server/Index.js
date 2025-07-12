@@ -118,6 +118,6 @@ app.post('/api/score/entry', async (req, res) => {
 mongoose
   .connect('mongodb+srv://roshangamit009:92827262@cluster0.vvp3jit.mongodb.net/CashierSimulator?retryWrites=true&w=majority&appName=Cluster0')
   .then(() => {
-    app.listen(5000, () => console.log('🚀 Server running at https://cashier-simulator.onrender.com'));
+    app.listen(5000, () => console.log('🚀 Server running at https:5000'));
   })
   .catch(err => console.error('❌ MongoDB connection failed:', err));
