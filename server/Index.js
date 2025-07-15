@@ -113,6 +113,16 @@ app.post('/api/score/entry', async (req, res) => {
   }
 });
 
+// Leaderboard: Get all users sorted by score (descending)
+app.get('/api/leaderboard', async (req, res) => {
+  try {
+    const leaders = await Score.find({}, { username: 1, score: 1, _id: 0 })
+      .sort({ score: -1 });
+    res.json(leaders);
+  } catch (err) {
+    res.status(500).json({ msg: 'Server error' });
+  }
+});
 
 // ✅ MongoDB Atlas Connection
 mongoose

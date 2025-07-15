@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
 import './auth.css';
@@ -14,6 +14,12 @@ const Register = () => {
 
   const navigate = useNavigate();
 
+  useEffect(() => {
+    if (localStorage.getItem('user')) {
+      navigate('/home');
+    }
+  }, [navigate]);
+
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
@@ -27,7 +33,7 @@ const Register = () => {
     }
 
     try {
-      const response = await axios.post('https://cashier-simulator.onrender.com/api/auth/register', {
+      const response = await axios.post('http://localhost:5000/api/auth/register', {
         username: form.username,
         email: form.email,
         password: form.password,
