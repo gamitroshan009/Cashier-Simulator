@@ -13,9 +13,9 @@ const Home = () => {
   const [countdown, setCountdown] = useState(0);
   const [message, setMessage] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
-
   const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState(1);
+  const [shift, setShift] = useState('parttime'); // Add this state
 
   useEffect(() => {
     simulateProgressWhileLoading();
@@ -60,12 +60,14 @@ const Home = () => {
       const res = await axios.get(`https://cashier-simulator.onrender.com/api/score/${user.username}`);
       setScore(res.data.score);
       setEntries(res.data.entries || []);
+      setShift(res.data.shift || user.shift || 'parttime'); // Set shift from backend or user
       if (res.data.score === 0) setMessage("You lose the game");
       else if (res.data.score < 10) setMessage("Work hard!");
       else if (res.data.score >= 100) setMessage("Well done!");
     } catch (err) {
       setScore(0);
       setEntries([]);
+      setShift(user.shift || 'parttime');
     }
   };
 
@@ -189,7 +191,7 @@ const Home = () => {
           </div>
 
           <div className="score-display">
-            Total Score: <b>{score}</b>
+            Total Score: <b>{score}</b> <span style={{fontSize: '0.8em', color: '#aaa'}}>({shift})</span>
           </div>
 
           {countdown > 0 && (

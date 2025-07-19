@@ -111,6 +111,9 @@ const Register = () => {
             Full Time (200 Score)
           </label>
         </div>
+        <span style={{fontSize: '0.8em', color: '#aaa'}}>
+          ({form.shift === 'fulltime' ? 'Full Time' : 'Part Time'})
+        </span>
 
         <button type="submit">Register</button>
 

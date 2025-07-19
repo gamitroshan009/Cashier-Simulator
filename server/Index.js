@@ -52,7 +52,8 @@ app.post('/api/auth/login', async (req, res) => {
       user: {
         username: user.username,
         email: user.email,
-        userId: user.userId
+        userId: user.userId,
+        shift: user.shift // <-- Add this line!
       }
     });
   } catch (err) {
@@ -90,7 +91,7 @@ app.get('/api/score/:user', async (req, res) => {
       await scoreDoc.save();
     }
 
-    res.json({ score: scoreDoc.score, entries: scoreDoc.entries });
+    res.json({ score: scoreDoc.score, entries: scoreDoc.entries, shift: scoreDoc.shift });
   } catch (err) {
     console.error(err);
     res.status(500).json({ msg: 'Server error' });
