@@ -15,28 +15,58 @@ const Home = () => {
   const [showDropdown, setShowDropdown] = useState(false);
 
   const [loading, setLoading] = useState(true);
-  const [progress, setProgress] = useState(0);
+  const [progress, setProgress] = useState(1);
 
   useEffect(() => {
-    startLoading();
+    simulateProgressWhileLoading();
+    fetchAllData().then(() => {
+      finishProgressAndHideLoader();
+    });
   }, []);
 
-  const startLoading = () => {
-    let p = 0;
+  const simulateProgressWhileLoading = () => {
+    let p = 1;
     const interval = setInterval(() => {
-      p += Math.floor(Math.random() * 5) + 1;
-      if (p >= 100) {
-        setProgress(100);
-        clearInterval(interval);
-        setTimeout(() => {
-          setLoading(false);
-          generateCalendar();
-          fetchScore();
-        }, 500);
+      p += Math.floor(Math.random() * 3) + 1;
+      if (p >= 90) {
+        clearInterval(interval); // Stop at 90%
       } else {
         setProgress(p);
       }
     }, 30);
+  };
+
+  const fetchAllData = async () => {
+    await generateCalendar();
+    await fetchScore();
+  };
+
+  const finishProgressAndHideLoader = () => {
+    let p = progress;
+    const finalInterval = setInterval(() => {
+      p += 1;
+      if (p >= 100) {
+        clearInterval(finalInterval);
+        setProgress(100);
+        setTimeout(() => setLoading(false), 400);
+      } else {
+        setProgress(p);
+      }
+    }, 20);
+  };
+
+  const fetchScore = async () => {
+    try {
+      const res = await axios.get(`https://cashier-simulator.onrender.com/api/score/${user.username}`);
+      setScore(res.data.score);
+      setEntries(res.data.entries || []);
+      if (res.data.score === 0) setMessage("You lose the game");
+      else if (res.data.score < 10) setMessage("Work hard!");
+      else if (res.data.score >= 100) setMessage("Well done!");
+    } catch (err) {
+      setScore(0);
+      setEntries([]);
+    }
   };
 
   useEffect(() => {
@@ -53,20 +83,6 @@ const Home = () => {
     }
     return () => clearTimeout(timer);
   }, [countdown]);
-
-  const fetchScore = async () => {
-    try {
-      const res = await axios.get(`http://localhost:5000/api/score/${user.username}`);
-      setScore(res.data.score);
-      setEntries(res.data.entries || []);
-      if (res.data.score === 0) setMessage("You lose the game");
-      else if (res.data.score < 10) setMessage("Work hard!");
-      else if (res.data.score >= 100) setMessage("Well done!");
-    } catch (err) {
-      setScore(0);
-      setEntries([]);
-    }
-  };
 
   const generateCalendar = () => {
     const today = new Date();
@@ -117,7 +133,7 @@ const Home = () => {
       return;
     }
     try {
-      const res = await axios.post('http://localhost:5000/api/score/entry', {
+      const res = await axios.post('https://cashier-simulator.onrender.com/api/score/entry', {
         username: user.username,
         date: selectedDate,
         status: type.toLowerCase(),
@@ -147,7 +163,7 @@ const Home = () => {
   return (
     <div className="home-container">
       {loading && (
-        <div className="loading-overlay">
+        <div className="loading-overlay fade-in">
           <div className="progress-box">
             <div className="progress-bar" style={{ width: `${progress}%` }} />
             <span>{progress}%</span>
@@ -155,80 +171,81 @@ const Home = () => {
         </div>
       )}
 
-      <div className="user-box">
-        <div className="username" onClick={() => setShowDropdown(!showDropdown)}>
-          Welcome, {user?.username || 'User'} 👋
-        </div>
-        {showDropdown && (
-          <div className="dropdown">
-           <button onClick={() => window.location.href = '/leaderboard'}>🏆 Top List</button>
-
-            <button onClick={() => {
-              localStorage.removeItem('user');
-              window.location.href = '/login';
-            }}>
-              🚪 Logout
-            </button>
-          </div>
-        )}
-      </div>
-
-      <div className="score-display">
-        Total Score: <b>{score}</b>
-      </div>
-
-      {countdown > 0 && (
-        <div className="countdown">
-          📅 Calendar will update in <b>{countdown}</b> second(s)
-        </div>
-      )}
-
-      {message && (
-        <div className="score-message">
-          🎯 <b>{message}</b>
-        </div>
-      )}
-
-      <div className="month-header">{dateRange}</div>
-
-      <div className="calendar-grid">
-        {calendarDates.map((date, index) => {
-          const year = date.getFullYear();
-          const month = String(date.getMonth() + 1).padStart(2, '0');
-          const day = String(date.getDate()).padStart(2, '0');
-          const dateStr = `${year}-${month}-${day}`;
-          const isSelected = dateStr === selectedDate;
-          const status = getDateStatus(dateStr);
-
-          let statusClass = '';
-          if (status === 'short') statusClass = 'date-short';
-          else if (status === 'excess') statusClass = 'date-excess';
-          else if (status === 'holiday') statusClass = 'date-holiday';
-
-          return (
-            <div
-              key={index}
-              className={`calendar-date ${isSelected ? 'selected' : ''} ${statusClass}`}
-              onClick={() => !status && handleDateClick(date)}
-              style={{ cursor: status ? 'not-allowed' : 'pointer' }}
-              title={status ? `Already marked as ${status}` : ''}
-            >
-              {date.getDate()}
+      {!loading && (
+        <>
+          <div className="user-box">
+            <div className="username" onClick={() => setShowDropdown(!showDropdown)}>
+              Welcome, {user?.username || 'User'} 👋
             </div>
-          );
-        })}
-      </div>
+            {showDropdown && (
+              <div className="dropdown">
+                <button onClick={() => window.location.href = '/leaderboard'}>🏆 Top List</button>
+                <button onClick={() => {
+                  localStorage.removeItem('user');
+                  window.location.href = '/login';
+                }}>🚪 Logout</button>
+              </div>
+            )}
+          </div>
 
-      <div className="input-group">
-        <input type="text" placeholder="Selected Date" value={selectedDate} readOnly />
-        <input type="number" placeholder="Rupees" value={money} onChange={(e) => setMoney(e.target.value)} />
-      </div>
+          <div className="score-display">
+            Total Score: <b>{score}</b>
+          </div>
 
-      <div className="button-group">
-        <button className="btn holiday" onClick={() => handleButtonClick('Excess')}>Excess</button>
-        <button className="btn short" onClick={() => handleButtonClick('Short')}>Short</button>
-        <button className="btn excess" onClick={() => handleButtonClick('Holiday')}>Tally/Holiday</button>
-      </div>
+          {countdown > 0 && (
+            <div className="countdown">
+              📅 Calendar will update in <b>{countdown}</b> second(s)
+            </div>
+          )}
+
+          {message && (
+            <div className="score-message">
+              🎯 <b>{message}</b>
+            </div>
+          )}
+
+          <div className="month-header">{dateRange}</div>
+
+          <div className="calendar-grid">
+            {calendarDates.map((date, index) => {
+              const year = date.getFullYear();
+              const month = String(date.getMonth() + 1).padStart(2, '0');
+              const day = String(date.getDate()).padStart(2, '0');
+              const dateStr = `${year}-${month}-${day}`;
+              const isSelected = dateStr === selectedDate;
+              const status = getDateStatus(dateStr);
+
+              let statusClass = '';
+              if (status === 'short') statusClass = 'date-short';
+              else if (status === 'excess') statusClass = 'date-excess';
+              else if (status === 'holiday') statusClass = 'date-holiday';
+
+              return (
+                <div
+                  key={index}
+                  className={`calendar-date ${isSelected ? 'selected' : ''} ${statusClass}`}
+                  onClick={() => !status && handleDateClick(date)}
+                  style={{ cursor: status ? 'not-allowed' : 'pointer' }}
+                  title={status ? `Already marked as ${status}` : ''}
+                >
+                  {date.getDate()}
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="input-group">
+            <input type="text" placeholder="Selected Date" value={selectedDate} readOnly />
+            <input type="number" placeholder="Rupees" value={money} onChange={(e) => setMoney(e.target.value)} />
+          </div>
+
+          <div className="button-group">
+            <button className="btn holiday" onClick={() => handleButtonClick('Excess')}>Excess</button>
+            <button className="btn short" onClick={() => handleButtonClick('Short')}>Short</button>
+            <button className="btn excess" onClick={() => handleButtonClick('Holiday')}>Tally/Holiday</button>
+          </div>
+        </>
+      )}
     </div>
   );
 };

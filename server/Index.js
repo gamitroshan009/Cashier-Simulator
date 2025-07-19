@@ -24,6 +24,7 @@ app.post('/api/auth/register', async (req, res) => {
       userId: user._id,
       username,
       score: initialScore,
+      shift, // <-- add this line
       entries: [] // ⬅ Ready to store short/excess/holiday
     });
     await score.save();
@@ -64,13 +65,30 @@ app.post('/api/auth/login', async (req, res) => {
 app.get('/api/score/:user', async (req, res) => {
   try {
     const userParam = req.params.user;
-
-    // Check if it's a valid ObjectId (userId), else treat as username
     const isObjectId = /^[0-9a-fA-F]{24}$/.test(userParam);
     const query = isObjectId ? { userId: userParam } : { username: userParam };
 
-    const scoreDoc = await Score.findOne(query);
+    let scoreDoc = await Score.findOne(query);
     if (!scoreDoc) return res.status(404).json({ msg: 'Score not found' });
+
+    // Get today's date
+    const today = new Date();
+    const is26th = today.getDate() === 26;
+
+    if (is26th) {
+      // Get shift from Score or User
+      let shift = scoreDoc.shift;
+      if (!shift) {
+        // If not in Score, fetch from User
+        const user = await User.findOne({ username: scoreDoc.username });
+        shift = user?.shift || 'parttime';
+      }
+      // Reset score and entries
+      scoreDoc.score = shift === 'fulltime' ? 200 : 100;
+      scoreDoc.entries = [];
+      scoreDoc.shift = shift; // Save shift for future
+      await scoreDoc.save();
+    }
 
     res.json({ score: scoreDoc.score, entries: scoreDoc.entries });
   } catch (err) {

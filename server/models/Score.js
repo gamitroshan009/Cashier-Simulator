@@ -13,7 +13,8 @@ const ScoreSchema = new mongoose.Schema(
         status: { type: String, enum: ['short', 'excess', 'holiday'], required: true },
         rupees: { type: Number, default: 0 }
       }
-    ]
+    ],
+    shift: { type: String, enum: ['parttime', 'fulltime'], required: false }
   },
   { timestamps: true }
 );
