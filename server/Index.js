@@ -5,9 +5,19 @@ const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
 const User = require('./models/User');
 const Score = require('./models/Score');
+const nodemailer = require('nodemailer');
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+// Configure your email transporter (example uses Gmail)
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: 'roshangamit009@gmail.com',      // replace with your email
+    pass: 'slckajdixeofpbfa'         // use an App Password, not your real password
+  }
+});
 
 // ✅ REGISTER Route
 app.post('/api/auth/register', async (req, res) => {
@@ -142,6 +152,58 @@ app.get('/api/leaderboard', async (req, res) => {
     res.status(500).json({ msg: 'Server error' });
   }
 });
+
+const otpStore = {}; // Temporary in-memory storage
+
+// Send OTP
+app.post('/api/auth/send-otp', async (req, res) => {
+  const { email } = req.body;
+  const user = await User.findOne({ email });
+  if (!user) return res.status(404).json({ success: false, msg: 'User not found' });
+
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  otpStore[email] = { otp, expires: Date.now() + 5 * 60 * 1000 };
+
+  // Send OTP via email using Nodemailer
+  try {
+    await transporter.sendMail({
+      from: '"Cashier Simulator" <yourgmail@gmail.com>', // sender address
+      to: email,                                         // receiver
+      subject: 'Your OTP Code',
+      text: `Your OTP code is: ${otp}`,
+      html: `<p>Your OTP code is: <b>${otp}</b></p>`
+    });
+    res.json({ success: true, msg: 'OTP sent' });
+  } catch (err) {
+    console.error('Email send error:', err);
+    res.status(500).json({ success: false, msg: 'Failed to send OTP email' });
+  }
+});
+
+// Verify OTP
+app.post('/api/auth/verify-otp', (req, res) => {
+  const { email, otp } = req.body;
+  const record = otpStore[email];
+  if (!record || record.otp !== otp || Date.now() > record.expires) {
+    return res.status(400).json({ success: false, msg: 'Invalid or expired OTP' });
+  }
+  res.json({ success: true });
+});
+
+// Reset password
+app.post('/api/auth/reset-password', async (req, res) => {
+  const { email, newPassword } = req.body;
+  const user = await User.findOne({ email });
+  if (!user) return res.status(404).json({ success: false, msg: 'User not found' });
+
+  const hashed = await bcrypt.hash(newPassword, 10);
+  user.password = hashed;
+  await user.save();
+  delete otpStore[email];
+
+  res.json({ success: true, msg: 'Password reset successfully' });
+});
+
 
 // ✅ MongoDB Atlas Connection
 mongoose

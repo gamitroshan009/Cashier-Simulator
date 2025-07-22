@@ -37,7 +37,7 @@ const Login = () => {
     e.preventDefault();
     simulateProgress();
     try {
-      const res = await axios.post('https://cashier-simulator.onrender.com/api/auth/login', form);
+      const res = await axios.post('http://localhost:5000/api/auth/login', form);
       const { token, user } = res.data;
 
       localStorage.setItem('token', token);
@@ -69,6 +69,11 @@ const Login = () => {
         <input type="email" name="email" placeholder="Email" onChange={handleChange} required />
         <input type="password" name="password" placeholder="Password" onChange={handleChange} required />
         <button type="submit">Login</button>
+
+        <p style={{ marginTop: '10px' }}>
+          <Link to="/forgot-password" style={{ fontSize: '0.9em' }}>Forgot Password?</Link>
+        </p>
+
         <p>
           Don't have an account? <Link to="/register">Register</Link>
         </p>

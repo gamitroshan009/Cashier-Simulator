@@ -10,7 +10,7 @@ const Leaderboard = () => {
   useEffect(() => {
     const fetchLeaders = async () => {
       try {
-        const res = await axios.get('https://cashier-simulator.onrender.com/api/leaderboard');
+        const res = await axios.get('http://localhost:5000/api/leaderboard');
         setLeaders(res.data);
       } catch (err) {
         setLeaders([]);
