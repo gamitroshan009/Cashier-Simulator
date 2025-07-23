@@ -6,11 +6,12 @@ const Leaderboard = () => {
   const [leaders, setLeaders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [selectedShift, setSelectedShift] = useState('All'); // 👈 dropdown filter
 
   useEffect(() => {
     const fetchLeaders = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/leaderboard');
+        const res = await axios.get('https://cashier-simulator.onrender.com/api/leaderboard');
         setLeaders(res.data);
       } catch (err) {
         setLeaders([]);
@@ -34,6 +35,15 @@ const Leaderboard = () => {
     window.location.href = '/login';
   };
 
+  // 👇 Filter logic
+  const filteredLeaders = selectedShift === 'All'
+    ? leaders
+    : leaders.filter(user =>
+        selectedShift === 'Full Time'
+          ? user.shift === 'fulltime'
+          : user.shift === 'parttime'
+      );
+
   return (
     <div className="leaderboard-container">
       {/* Header */}
@@ -54,6 +64,20 @@ const Leaderboard = () => {
         )}
       </div>
 
+      {/* Filter Listbox */}
+      <div className="filter-box">
+        <label htmlFor="shift-select">Filter by Shift:</label>
+        <select
+          id="shift-select"
+          value={selectedShift}
+          onChange={(e) => setSelectedShift(e.target.value)}
+        >
+          <option value="All">All</option>
+          <option value="Full Time">Full Time</option>
+          <option value="Part Time">Part Time</option>
+        </select>
+      </div>
+
       {loading ? (
         <p className="loading-text">Loading...</p>
       ) : (
@@ -68,7 +92,7 @@ const Leaderboard = () => {
                 </tr>
               </thead>
               <tbody>
-                {leaders.map((user, idx) => (
+                {filteredLeaders.map((user, idx) => (
                   <tr key={user.username}>
                     <td>{idx + 1}</td>
                     <td>{user.username}</td>
@@ -81,7 +105,7 @@ const Leaderboard = () => {
 
           {/* Mobile Cards */}
           <div className="mobile-card-list">
-            {leaders.map((user, idx) => (
+            {filteredLeaders.map((user, idx) => (
               <div key={user.username} className="mobile-card">
                 <div className="rank">🏅 Rank #{idx + 1}</div>
                 <div className="username">{user.username}</div>

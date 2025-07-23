@@ -57,7 +57,7 @@ const Home = () => {
 
   const fetchScore = async () => {
     try {
-      const res = await axios.get(`http://localhost:5000/api/score/${user.username}`);
+      const res = await axios.get(`https://cashier-simulator.onrender.com/api/score/${user.username}`);
       setScore(res.data.score);
       setEntries(res.data.entries || []);
       setShift(res.data.shift || user.shift || 'parttime'); // Set shift from backend or user
@@ -135,7 +135,7 @@ const Home = () => {
       return;
     }
     try {
-      const res = await axios.post('http://localhost:5000/api/score/entry', {
+      const res = await axios.post('https://cashier-simulator.onrender.com/api/score/entry', {
         username: user.username,
         date: selectedDate,
         status: type.toLowerCase(),

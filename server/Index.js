@@ -145,7 +145,7 @@ app.post('/api/score/entry', async (req, res) => {
 // Leaderboard: Get all users sorted by score (descending)
 app.get('/api/leaderboard', async (req, res) => {
   try {
-    const leaders = await Score.find({}, { username: 1, score: 1, _id: 0 })
+    const leaders = await Score.find({}, { username: 1, score: 1, shift: 1, _id: 0 }) // <-- add shift: 1
       .sort({ score: -1 });
     res.json(leaders);
   } catch (err) {
