@@ -22,6 +22,9 @@ const Home = () => {
   const [lostPointsType, setLostPointsType] = useState('');
   const [dateUsed, setDateUsed] = useState(false);
   const [showOldCalendar, setShowOldCalendar] = useState(false);
+  const [showWinBox, setShowWinBox] = useState(false);
+  const [winCountdown, setWinCountdown] = useState(60);
+  const [winMessage, setWinMessage] = useState('');
 
   useEffect(() => {
     simulateProgressWhileLoading();
@@ -189,7 +192,14 @@ const Home = () => {
 
       const selected = new Date(selectedDate);
       if (selected.getDate() === 25) {
-        setCountdown(60);
+        // Show win box
+        if (res.data.score >= 0) {
+          setWinMessage(`🎉 You win! Incentive: ₹${800 + res.data.score}`);
+        } else {
+          setWinMessage('😢 Try next time with better performance');
+        }
+        setShowWinBox(true);
+        setWinCountdown(60);
       }
 
       setSelectedDate('');
@@ -234,6 +244,17 @@ const Home = () => {
       }
     }
   }, [entries, calendarDates, showOldCalendar]);
+
+  useEffect(() => {
+    if (!showWinBox) return;
+    if (winCountdown <= 0) {
+      setShowWinBox(false);
+      setWinMessage('');
+      return;
+    }
+    const timer = setTimeout(() => setWinCountdown(winCountdown - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [showWinBox, winCountdown]);
 
   return (
     <div className="home-container">
@@ -359,6 +380,38 @@ const Home = () => {
             <button className="btn short" onClick={() => handleButtonClick('Short')}>Short</button>
             <button className="btn excess" onClick={() => handleButtonClick('Holiday')}>Tally/Holiday</button>
           </div>
+
+          {showWinBox && (
+            <div
+              style={{
+                position: 'fixed',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                background: '#eaffea',
+                border: '3px solid #28a745',
+                borderRadius: '16px',
+                boxShadow: '0 8px 32px #0003',
+                minWidth: '260px',
+                minHeight: '120px',
+                zIndex: 3000,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '1.5rem',
+                fontWeight: 'bold',
+                color: '#28a745',
+                padding: '32px 24px',
+                textAlign: 'center'
+              }}
+            >
+              <div>{winMessage}</div>
+              <div style={{ fontSize: '1rem', color: '#333', marginTop: 12 }}>
+                Calendar will update in <b>{winCountdown}</b> second(s)
+              </div>
+            </div>
+          )}
         </>
       )}
       <Footer />

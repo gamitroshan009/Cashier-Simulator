@@ -82,25 +82,13 @@ app.get('/api/score/:user', async (req, res) => {
     let scoreDoc = await Score.findOne(query);
     if (!scoreDoc) return res.status(404).json({ msg: 'Score not found' });
 
-    // Get today's date
     const today = new Date();
-
-    // On the 26th, reset score and entries according to shift
-    if (today.getDate() === 26) {
-      let shift = scoreDoc.shift;
-      if (!shift) {
-        const user = await User.findOne({ username: scoreDoc.username });
-        shift = user?.shift || 'parttime';
-      }
-      scoreDoc.score = shift === 'fulltime' ? 200 : 100;
-      scoreDoc.entries = [];
-      scoreDoc.shift = shift;
-      await scoreDoc.save();
-    }
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
 
     // Calculate last month's 25th date string
-    let lastMonth = today.getMonth() - 1;
-    let year = today.getFullYear();
+    let lastMonth = currentMonth - 1;
+    let year = currentYear;
     if (lastMonth < 0) {
       lastMonth = 11;
       year -= 1;
@@ -111,11 +99,24 @@ app.get('/api/score/:user', async (req, res) => {
     // Check if last month's 25th entry exists
     const hasLast25 = scoreDoc.entries.some(entry => entry.date === last25Str);
 
+    // If last month's 25th entry is found, start new calendar and refresh score
+    if (hasLast25) {
+      let shift = scoreDoc.shift;
+      if (!shift) {
+        const user = await User.findOne({ username: scoreDoc.username });
+        shift = user?.shift || 'parttime';
+      }
+      scoreDoc.score = shift === 'fulltime' ? 200 : 100;
+      scoreDoc.entries = []; // Remove last month's records
+      scoreDoc.shift = shift;
+      await scoreDoc.save();
+    }
+
     res.json({
       score: scoreDoc.score,
       entries: scoreDoc.entries,
       shift: scoreDoc.shift,
-      missingLast25: !hasLast25 // <-- send flag to frontend
+      missingLast25: !hasLast25
     });
   } catch (err) {
     console.error(err);
