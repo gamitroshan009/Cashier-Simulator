@@ -20,6 +20,7 @@ const Home = () => {
   const [lostPoints, setLostPoints] = useState(null);
   const [lostPointsType, setLostPointsType] = useState('');
   const [dateUsed, setDateUsed] = useState(false);
+  const [missingLast25, setMissingLast25] = useState(false);
 
   useEffect(() => {
     simulateProgressWhileLoading();
@@ -64,7 +65,8 @@ const Home = () => {
       const res = await axios.get(`https://cashier-simulator.onrender.com/api/score/${user.username}`);
       setScore(res.data.score);
       setEntries(res.data.entries || []);
-      setShift(res.data.shift || user.shift || 'parttime'); // Set shift from backend or user
+      setShift(res.data.shift || user.shift || 'parttime');
+      setMissingLast25(res.data.missingLast25 || false); // <-- set flag
       if (res.data.score === 0) setMessage("You lose the game");
       else if (res.data.score < 10) setMessage("Work hard!");
       else if (res.data.score >= 100) setMessage("Well done!");
@@ -72,6 +74,7 @@ const Home = () => {
       setScore(0);
       setEntries([]);
       setShift(user.shift || 'parttime');
+      setMissingLast25(false);
     }
   };
 
@@ -321,6 +324,21 @@ const Home = () => {
             <button className="btn short" onClick={() => handleButtonClick('Short')}>Short</button>
             <button className="btn excess" onClick={() => handleButtonClick('Holiday')}>Tally/Holiday</button>
           </div>
+
+          {missingLast25 && (
+            <div style={{
+              background: '#ffeaea',
+              color: '#dc3545',
+              padding: '12px 20px',
+              borderRadius: '8px',
+              marginBottom: '16px',
+              fontWeight: 'bold',
+              textAlign: 'center',
+              border: '2px solid #dc3545'
+            }}>
+              ⚠️ Last month's 25th entry is missing. Please mark it as Record
+            </div>
+          )}
         </>
       )}
       <Footer />

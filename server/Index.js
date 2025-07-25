@@ -120,7 +120,12 @@ app.get('/api/score/:user', async (req, res) => {
       await scoreDoc.save();
     }
 
-    res.json({ score: scoreDoc.score, entries: scoreDoc.entries, shift: scoreDoc.shift });
+    res.json({
+      score: scoreDoc.score,
+      entries: scoreDoc.entries,
+      shift: scoreDoc.shift,
+      missingLast25: !hasLast25 // <-- add this line
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ msg: 'Server error' });
