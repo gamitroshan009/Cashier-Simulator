@@ -106,7 +106,7 @@ app.get('/api/score/:user', async (req, res) => {
         const user = await User.findOne({ username: scoreDoc.username });
         shift = user?.shift || 'parttime';
       }
-      scoreDoc.score = shift === 'fulltime' ? 200 : 100;
+      scoreDoc.score = shift === 'fulltime' ? 200 : 100; // <-- update score by shift
       scoreDoc.entries = []; // Remove last month's records
       scoreDoc.shift = shift;
       await scoreDoc.save();
