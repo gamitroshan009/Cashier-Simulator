@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import './Leaderboard.css';
+import Footer from '../components/Footer';
 
 const Leaderboard = () => {
   const [leaders, setLeaders] = useState([]);
@@ -115,6 +116,8 @@ const Leaderboard = () => {
           </div>
         </>
       )}
+
+      <Footer />
     </div>
   );
 };

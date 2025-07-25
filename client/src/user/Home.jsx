@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import './Home.css';
+import Footer from '../components/Footer';
 
 const Home = () => {
   const user = JSON.parse(localStorage.getItem('user'));
@@ -16,6 +17,9 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState(1);
   const [shift, setShift] = useState('parttime'); // Add this state
+  const [lostPoints, setLostPoints] = useState(null);
+  const [lostPointsType, setLostPointsType] = useState('');
+  const [dateUsed, setDateUsed] = useState(false);
 
   useEffect(() => {
     simulateProgressWhileLoading();
@@ -127,6 +131,26 @@ const Home = () => {
     const day = String(date.getDate()).padStart(2, '0');
     const formatted = `${year}-${month}-${day}`;
     setSelectedDate(formatted);
+
+    // Find entry for this date
+    const entry = entries.find(e => e.date === formatted);
+    if (entry) {
+      setDateUsed(true);
+      if (entry.status === 'short') {
+        setLostPoints(-Math.abs(entry.rupees));
+        setLostPointsType('short');
+      } else if (entry.status === 'excess') {
+        setLostPoints(Math.abs(entry.rupees));
+        setLostPointsType('excess');
+      } else if (entry.status === 'holiday') {
+        setLostPoints(0);
+        setLostPointsType('holiday');
+      }
+    } else {
+      setDateUsed(false);
+      setLostPoints(null);
+      setLostPointsType('');
+    }
   };
 
   const handleButtonClick = async (type) => {
@@ -162,6 +186,17 @@ const Home = () => {
     return entry ? entry.status : null;
   };
 
+  // Calculate remaining days (including today)
+  const today = new Date();
+  const lastDay = calendarDates.length > 0 ? calendarDates[calendarDates.length - 1] : today;
+  const daysLeft = Math.max(
+    1,
+    Math.ceil((lastDay - today) / (1000 * 60 * 60 * 24)) + 1
+  );
+
+  // Calculate spend per day
+  const spendPerDay = daysLeft > 0 ? Math.floor(score / daysLeft) : score;
+
   return (
     <div className="home-container">
       {loading && (
@@ -192,6 +227,9 @@ const Home = () => {
 
           <div className="score-display">
             Total Score: <b>{score}</b> <span style={{fontSize: '0.8em', color: '#aaa'}}>({shift})</span>
+          </div>
+          <div style={{ margin: '8px 0', color: '#0077cc', fontWeight: 500 }}>
+            Spend per day: {spendPerDay}
           </div>
 
           {countdown > 0 && (
@@ -226,8 +264,8 @@ const Home = () => {
                 <div
                   key={index}
                   className={`calendar-date ${isSelected ? 'selected' : ''} ${statusClass}`}
-                  onClick={() => !status && handleDateClick(date)}
-                  style={{ cursor: status ? 'not-allowed' : 'pointer' }}
+                  onClick={() => handleDateClick(date)} // <-- always allow click
+                  style={{ cursor: 'pointer' }}         // <-- always pointer
                   title={status ? `Already marked as ${status}` : ''}
                 >
                   {date.getDate()}
@@ -236,9 +274,46 @@ const Home = () => {
             })}
           </div>
 
+          {/* Show lost points for selected date */}
+          {selectedDate && lostPoints !== null && (
+            <div className={`lost-points-box ${lostPointsType}`}>
+              <button
+                className="lost-points-back"
+                onClick={() => {
+                  setSelectedDate('');
+                  setLostPoints(null);
+                  setLostPointsType('');
+                  setDateUsed(false);
+                }}
+              >
+                Back
+              </button>
+              {lostPointsType === 'excess' && (
+                <span className="lost-points-value">+{Math.abs(lostPoints)}</span>
+              )}
+              {lostPointsType === 'short' && (
+                <span className="lost-points-value">-{Math.abs(lostPoints)}</span>
+              )}
+              {lostPointsType === 'holiday' && (
+                <span className="lost-points-value">0</span>
+              )}
+              <span className="lost-points-label">
+                {lostPointsType === 'excess' && ' Excess'}
+                {lostPointsType === 'short' && ' Short'}
+                {lostPointsType === 'holiday' && ' Holiday/Tally'}
+              </span>
+            </div>
+          )}
+
           <div className="input-group">
             <input type="text" placeholder="Selected Date" value={selectedDate} readOnly />
-            <input type="number" placeholder="Rupees" value={money} onChange={(e) => setMoney(e.target.value)} />
+            <input
+              type="number"
+              placeholder="Rupees"
+              value={money}
+              onChange={(e) => setMoney(e.target.value)}
+              disabled={dateUsed}
+            />
           </div>
 
           <div className="button-group">
@@ -248,6 +323,7 @@ const Home = () => {
           </div>
         </>
       )}
+      <Footer />
     </div>
   );
 };

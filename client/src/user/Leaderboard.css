@@ -1,27 +1,89 @@
+/* Container */
 .leaderboard-container {
-  max-width: 800px;
-  margin: 30px auto;
+  font-family: 'Segoe UI', sans-serif;
   padding: 20px;
-  background-color: #f8f9fa;
-  border-radius: 12px;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-  font-family: Arial, sans-serif;
+  animation: fadeIn 0.6s ease-in-out;
+  background-color: #f9f9f9;
+  min-height: 100vh;
 }
 
-.leaderboard-title {
-  text-align: center;
-  font-size: 28px;
-  font-weight: bold;
-  color: #2c3e50;
+/* Header */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 20px;
 }
 
-.loading-text {
-  text-align: center;
-  font-size: 18px;
-  color: #555;
+.leaderboard-title {
+  font-size: 24px;
+  color: #333;
 }
 
+/* Hamburger Menu Icon */
+.menu-icon {
+  width: 30px;
+  cursor: pointer;
+}
+
+.menu-icon .bar {
+  height: 3px;
+  background: #333;
+  margin: 5px 0;
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+
+/* Dropdown Menu */
+.dropdown-menu {
+  position: absolute;
+  right: 20px;
+  top: 60px;
+  background: white;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  overflow: hidden;
+  z-index: 10;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.dropdown-menu button {
+  background: none;
+  border: none;
+  padding: 12px 20px;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background 0.2s;
+}
+
+.dropdown-menu button:hover {
+  background-color: #f0f0f0;
+}
+
+/* Filter Dropdown */
+.filter-box {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 20px;
+  gap: 10px;
+}
+
+.filter-box label {
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.filter-box select {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+}
+
+/* Table View (Desktop) */
 .table-wrapper {
   overflow-x: auto;
 }
@@ -29,39 +91,44 @@
 .leaderboard-table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 10px;
   background-color: white;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
   border-radius: 8px;
   overflow: hidden;
+  animation: fadeIn 0.4s ease-in;
 }
 
 .leaderboard-table th,
 .leaderboard-table td {
-  padding: 12px 15px;
-  text-align: center;
-  border-bottom: 1px solid #e0e0e0;
+  padding: 14px 20px;
+  text-align: left;
+  border-bottom: 1px solid #f0f0f0;
 }
 
 .leaderboard-table th {
-  background-color: #3498db;
-  color: white;
-  font-weight: bold;
+  background-color: #f3f3f3;
+  font-weight: 600;
+  color: #444;
 }
 
-.leaderboard-table tr:nth-child(even) {
-  background-color: #f4f6f8;
+.leaderboard-table td {
+  color: #555;
 }
 
-.leaderboard-table tr:hover {
-  background-color: #e1ecf4;
+/* Loading Text */
+.loading-text {
+  text-align: center;
+  font-size: 18px;
+  color: #888;
+  margin-top: 40px;
 }
 
-/* Hide mobile card on desktop, show on mobile */
+/* Mobile Card View (Hidden on Desktop) */
 .mobile-card-list {
   display: none;
 }
 
-/* Show on mobile devices (max-width: 768px) */
+/* Mobile Styles */
 @media (max-width: 768px) {
   .leaderboard-table {
     display: none;
@@ -69,28 +136,49 @@
 
   .mobile-card-list {
     display: block;
-    padding: 10px;
+    animation: fadeIn 0.5s ease-in;
   }
 
   .mobile-card {
-    background: #f4f4f4;
-    padding: 15px;
-    margin-bottom: 10px;
-    border-radius: 8px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    background: #ffffff;
+    padding: 16px;
+    margin: 12px 0;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s ease;
+  }
+
+  .mobile-card:hover {
+    transform: scale(1.01);
   }
 
   .mobile-card .rank {
     font-weight: bold;
-    margin-bottom: 5px;
+    font-size: 16px;
+    color: #333;
   }
 
   .mobile-card .username {
-    font-size: 16px;
+    font-size: 18px;
+    margin-top: 6px;
+    color: #0077cc;
   }
 
   .mobile-card .score {
-    font-size: 14px;
-    color: #555;
+    font-size: 16px;
+    margin-top: 4px;
+    color: #666;
+  }
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

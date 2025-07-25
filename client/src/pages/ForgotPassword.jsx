@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom'; // ⬅️ Import for navigation
 import './auth.css';
+import Footer from '../components/Footer';
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
@@ -96,7 +97,13 @@ const ForgotPassword = () => {
         )}
 
         <p style={{ marginTop: '10px', color: 'red' }}>{message}</p>
+        <p style={{ marginTop: '10px', color: '#0077cc' }}>
+          <a href="/login" style={{ textDecoration: 'underline', color: '#0077cc' }}>
+            Back to Login
+          </a>
+        </p>
       </div>
+      
     </div>
   );
 };

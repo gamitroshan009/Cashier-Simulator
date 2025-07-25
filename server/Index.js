@@ -86,18 +86,37 @@ app.get('/api/score/:user', async (req, res) => {
     const today = new Date();
     const is26th = today.getDate() === 26;
 
+    // Calculate last month's 25th date string
+    let lastMonth = today.getMonth() - 1;
+    let year = today.getFullYear();
+    if (lastMonth < 0) {
+      lastMonth = 11;
+      year -= 1;
+    }
+    const last25Date = new Date(year, lastMonth, 25);
+    const last25Str = `${last25Date.getFullYear()}-${String(last25Date.getMonth() + 1).padStart(2, '0')}-${String(last25Date.getDate()).padStart(2, '0')}`;
+
     if (is26th) {
+      // Fill last month's 25th entry if missing
+      const hasLast25 = scoreDoc.entries.some(entry => entry.date === last25Str);
+      if (!hasLast25) {
+        scoreDoc.entries.push({
+          date: last25Str,
+          status: 'holiday',
+          rupees: 0
+        });
+      }
+
       // Get shift from Score or User
       let shift = scoreDoc.shift;
       if (!shift) {
-        // If not in Score, fetch from User
         const user = await User.findOne({ username: scoreDoc.username });
         shift = user?.shift || 'parttime';
       }
       // Reset score and entries
       scoreDoc.score = shift === 'fulltime' ? 200 : 100;
       scoreDoc.entries = [];
-      scoreDoc.shift = shift; // Save shift for future
+      scoreDoc.shift = shift;
       await scoreDoc.save();
     }
 
