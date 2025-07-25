@@ -5,6 +5,7 @@ import Footer from '../components/Footer';
 
 const Home = () => {
   const user = JSON.parse(localStorage.getItem('user'));
+  const [missingLast25, setMissingLast25] = useState(false);
   const [calendarDates, setCalendarDates] = useState([]);
   const [selectedDate, setSelectedDate] = useState('');
   const [money, setMoney] = useState('');
@@ -20,7 +21,7 @@ const Home = () => {
   const [lostPoints, setLostPoints] = useState(null);
   const [lostPointsType, setLostPointsType] = useState('');
   const [dateUsed, setDateUsed] = useState(false);
-  const [missingLast25, setMissingLast25] = useState(false);
+  const [showOldCalendar, setShowOldCalendar] = useState(false);
 
   useEffect(() => {
     simulateProgressWhileLoading();
@@ -67,43 +68,26 @@ const Home = () => {
       setEntries(res.data.entries || []);
       setShift(res.data.shift || user.shift || 'parttime');
       setMissingLast25(res.data.missingLast25 || false);
-      // Generate calendar after missingLast25 is set
-      generateCalendar();
-      if (res.data.score === 0) setMessage("You lose the game");
-      else if (res.data.score < 10) setMessage("Work hard!");
-      else if (res.data.score >= 100) setMessage("Well done!");
+      setShowOldCalendar(res.data.missingLast25 || false);
+      generateCalendar(res.data.missingLast25 || false);
     } catch (err) {
       setScore(0);
       setEntries([]);
       setShift(user.shift || 'parttime');
       setMissingLast25(false);
-      generateCalendar();
+      setShowOldCalendar(false);
+      generateCalendar(false);
     }
   };
 
-  useEffect(() => {
-    let timer;
-    if (countdown > 0) {
-      timer = setTimeout(() => {
-        setCountdown((prev) => prev - 1);
-        fetchScore();
-      }, 1000);
-    } else if (countdown === 0) {
-      generateCalendar();
-      fetchScore();
-      setMessage('');
-    }
-    return () => clearTimeout(timer);
-  }, [countdown]);
-
-  const generateCalendar = () => {
+  const generateCalendar = (showOld) => {
     const today = new Date();
     let currentMonth = today.getMonth();
     let currentYear = today.getFullYear();
 
     let startDate, endDate;
 
-    if (missingLast25) {
+    if (showOld) {
       // Show previous month calendar
       let prevMonth = currentMonth - 1;
       let prevYear = currentYear;
@@ -144,6 +128,21 @@ const Home = () => {
 
     setCalendarDates(dates);
   };
+
+  useEffect(() => {
+    let timer;
+    if (countdown > 0) {
+      timer = setTimeout(() => {
+        setCountdown((prev) => prev - 1);
+        fetchScore();
+      }, 1000);
+    } else if (countdown === 0) {
+      generateCalendar();
+      fetchScore();
+      setMessage('');
+    }
+    return () => clearTimeout(timer);
+  }, [countdown]);
 
   const handleDateClick = (date) => {
     const year = date.getFullYear();
@@ -216,6 +215,25 @@ const Home = () => {
 
   // Calculate spend per day
   const spendPerDay = daysLeft > 0 ? Math.floor(score / daysLeft) : score;
+
+  // After marking 25th, switch to next calendar after 1 minute
+  useEffect(() => {
+    if (!showOldCalendar) return;
+    const lastDate = calendarDates.length > 0 ? calendarDates[calendarDates.length - 1] : null;
+    if (lastDate) {
+      const year = lastDate.getFullYear();
+      const month = String(lastDate.getMonth() + 1).padStart(2, '0');
+      const day = String(lastDate.getDate()).padStart(2, '0');
+      const lastDateStr = `${year}-${month}-${day}`;
+      const entry = entries.find(e => e.date === lastDateStr);
+      if (entry) {
+        setTimeout(() => {
+          setShowOldCalendar(false);
+          generateCalendar(false);
+        }, 60000); // 1 minute
+      }
+    }
+  }, [entries, calendarDates, showOldCalendar]);
 
   return (
     <div className="home-container">
@@ -341,21 +359,6 @@ const Home = () => {
             <button className="btn short" onClick={() => handleButtonClick('Short')}>Short</button>
             <button className="btn excess" onClick={() => handleButtonClick('Holiday')}>Tally/Holiday</button>
           </div>
-
-          {missingLast25 && (
-            <div style={{
-              background: '#ffeaea',
-              color: '#dc3545',
-              padding: '12px 20px',
-              borderRadius: '8px',
-              marginBottom: '16px',
-              fontWeight: 'bold',
-              textAlign: 'center',
-              border: '2px solid #dc3545'
-            }}>
-              ⚠️ Last month's 25th entry is missing. Please mark it as Record
-            </div>
-          )}
         </>
       )}
       <Footer />
