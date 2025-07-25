@@ -66,7 +66,9 @@ const Home = () => {
       setScore(res.data.score);
       setEntries(res.data.entries || []);
       setShift(res.data.shift || user.shift || 'parttime');
-      setMissingLast25(res.data.missingLast25 || false); // <-- set flag
+      setMissingLast25(res.data.missingLast25 || false);
+      // Generate calendar after missingLast25 is set
+      generateCalendar();
       if (res.data.score === 0) setMessage("You lose the game");
       else if (res.data.score < 10) setMessage("Work hard!");
       else if (res.data.score >= 100) setMessage("Well done!");
@@ -75,6 +77,7 @@ const Home = () => {
       setEntries([]);
       setShift(user.shift || 'parttime');
       setMissingLast25(false);
+      generateCalendar();
     }
   };
 
@@ -98,16 +101,30 @@ const Home = () => {
     let currentMonth = today.getMonth();
     let currentYear = today.getFullYear();
 
-    if (today.getDate() > 25) {
-      currentMonth += 1;
-      if (currentMonth > 11) {
-        currentMonth = 0;
-        currentYear += 1;
-      }
-    }
+    let startDate, endDate;
 
-    const startDate = new Date(currentYear, currentMonth - 1, 26);
-    const endDate = new Date(currentYear, currentMonth, 25);
+    if (missingLast25) {
+      // Show previous month calendar
+      let prevMonth = currentMonth - 1;
+      let prevYear = currentYear;
+      if (prevMonth < 0) {
+        prevMonth = 11;
+        prevYear -= 1;
+      }
+      startDate = new Date(prevYear, prevMonth, 26);
+      endDate = new Date(currentYear, currentMonth, 25);
+    } else {
+      // Show current month calendar
+      if (today.getDate() > 25) {
+        currentMonth += 1;
+        if (currentMonth > 11) {
+          currentMonth = 0;
+          currentYear += 1;
+        }
+      }
+      startDate = new Date(currentYear, currentMonth - 1, 26);
+      endDate = new Date(currentYear, currentMonth, 25);
+    }
 
     const formatDate = (date) => {
       const day = date.getDate();
