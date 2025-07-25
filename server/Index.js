@@ -84,23 +84,8 @@ app.get('/api/score/:user', async (req, res) => {
 
     // Get today's date
     const today = new Date();
-    const currentMonth = today.getMonth();
-    const currentYear = today.getFullYear();
 
-    // Calculate last month's 25th date string
-    let lastMonth = currentMonth - 1;
-    let year = currentYear;
-    if (lastMonth < 0) {
-      lastMonth = 11;
-      year -= 1;
-    }
-    const last25Date = new Date(year, lastMonth, 25);
-    const last25Str = `${last25Date.getFullYear()}-${String(last25Date.getMonth() + 1).padStart(2, '0')}-${String(last25Date.getDate()).padStart(2, '0')}`;
-
-    // Check if last month's 25th entry exists
-    const hasLast25 = scoreDoc.entries.some(entry => entry.date === last25Str);
-
-    // Reset score on 26th
+    // On the 26th, reset score and entries according to shift
     if (today.getDate() === 26) {
       let shift = scoreDoc.shift;
       if (!shift) {
@@ -112,6 +97,19 @@ app.get('/api/score/:user', async (req, res) => {
       scoreDoc.shift = shift;
       await scoreDoc.save();
     }
+
+    // Calculate last month's 25th date string
+    let lastMonth = today.getMonth() - 1;
+    let year = today.getFullYear();
+    if (lastMonth < 0) {
+      lastMonth = 11;
+      year -= 1;
+    }
+    const last25Date = new Date(year, lastMonth, 25);
+    const last25Str = `${last25Date.getFullYear()}-${String(last25Date.getMonth() + 1).padStart(2, '0')}-${String(last25Date.getDate()).padStart(2, '0')}`;
+
+    // Check if last month's 25th entry exists
+    const hasLast25 = scoreDoc.entries.some(entry => entry.date === last25Str);
 
     res.json({
       score: scoreDoc.score,
