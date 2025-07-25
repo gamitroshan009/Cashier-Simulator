@@ -145,12 +145,36 @@ app.post('/api/score/entry', async (req, res) => {
 
     scoreDoc.score += scoreChange;
     scoreDoc.entries.push({ date, status, rupees: rupeeAmount });
+
+    // If entry is for the 25th, reset score and entries for next month
+    const entryDate = new Date(date);
+    if (entryDate.getDate() === 25) {
+      let shift = scoreDoc.shift;
+      if (!shift) {
+        const user = await User.findOne({ username: scoreDoc.username });
+        shift = user?.shift || 'parttime';
+      }
+      scoreDoc.score = shift === 'fulltime' ? 200 : 100;
+      scoreDoc.entries = [];
+      scoreDoc.shift = shift;
+      await scoreDoc.save();
+      return res.json({
+        msg: 'Entry added and new month started',
+        score: scoreDoc.score,
+        entries: scoreDoc.entries,
+        shift: scoreDoc.shift,
+        newMonth: true
+      });
+    }
+
     await scoreDoc.save();
 
     res.json({
       msg: 'Entry added',
       score: scoreDoc.score,
-      entries: scoreDoc.entries
+      entries: scoreDoc.entries,
+      shift: scoreDoc.shift,
+      newMonth: false
     });
   } catch (err) {
     console.error(err);

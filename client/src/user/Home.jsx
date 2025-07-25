@@ -199,12 +199,21 @@ const Home = () => {
           setWinMessage('😢 Try next time with better performance');
         }
         setShowWinBox(true);
-        setWinCountdown(60);
+        setWinCountdown(30);
       }
 
       setSelectedDate('');
       setMoney('');
-      fetchScore();
+
+      // If new month started, refresh calendar and score
+      if (res.data.newMonth) {
+        setShowOldCalendar(false);
+        setMissingLast25(false);
+        generateCalendar(false);
+        fetchScore();
+      } else {
+        fetchScore();
+      }
     } catch (err) {
       alert('Failed to update score');
     }
