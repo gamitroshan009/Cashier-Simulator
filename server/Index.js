@@ -83,40 +83,55 @@ app.get('/api/score/:user', async (req, res) => {
     if (!scoreDoc) return res.status(404).json({ msg: 'Score not found' });
 
     const today = new Date();
-    const currentMonth = today.getMonth();
-    const currentYear = today.getFullYear();
+    let startMonth = today.getMonth();
+    let startYear = today.getFullYear();
+    let endMonth = today.getMonth();
+    let endYear = today.getFullYear();
 
-    // Calculate last month's 25th date string
-    let lastMonth = currentMonth - 1;
-    let year = currentYear;
+    // If today is after the 25th, start from this month's 26th to next month's 25th
+    if (today.getDate() > 25) {
+      startMonth = today.getMonth();
+      startYear = today.getFullYear();
+      endMonth = today.getMonth() + 1;
+      endYear = today.getFullYear();
+      if (endMonth > 11) {
+        endMonth = 0;
+        endYear += 1;
+      }
+    } else {
+      // If today is 25th or before, start from last month's 26th to this month's 25th
+      startMonth = today.getMonth() - 1;
+      startYear = today.getFullYear();
+      if (startMonth < 0) {
+        startMonth = 11;
+        startYear -= 1;
+      }
+      endMonth = today.getMonth();
+      endYear = today.getFullYear();
+    }
+
+    const startDate = new Date(startYear, startMonth, 26);
+    const endDate = new Date(endYear, endMonth, 25);
+
+    // Calculate last month's 25th date string for missingLast25 logic
+    let lastMonth = today.getMonth() - 1;
+    let lastYear = today.getFullYear();
     if (lastMonth < 0) {
       lastMonth = 11;
-      year -= 1;
+      lastYear -= 1;
     }
-    const last25Date = new Date(year, lastMonth, 25);
+    const last25Date = new Date(lastYear, lastMonth, 25);
     const last25Str = `${last25Date.getFullYear()}-${String(last25Date.getMonth() + 1).padStart(2, '0')}-${String(last25Date.getDate()).padStart(2, '0')}`;
-
-    // Check if last month's 25th entry exists
     const hasLast25 = scoreDoc.entries.some(entry => entry.date === last25Str);
 
-    // If last month's 25th entry is found, start new calendar and refresh score
-    if (hasLast25) {
-      let shift = scoreDoc.shift;
-      if (!shift) {
-        const user = await User.findOne({ username: scoreDoc.username });
-        shift = user?.shift || 'parttime';
-      }
-      scoreDoc.score = shift === 'fulltime' ? 200 : 100; // <-- update score by shift
-      scoreDoc.entries = []; // Remove last month's records
-      scoreDoc.shift = shift;
-      await scoreDoc.save();
-    }
-
+    // Always send the correct calendar period
     res.json({
       score: scoreDoc.score,
       entries: scoreDoc.entries,
       shift: scoreDoc.shift,
-      missingLast25: !hasLast25
+      missingLast25: !hasLast25,
+      calendarStart: startDate.toISOString().slice(0, 10), // e.g. "2025-07-26"
+      calendarEnd: endDate.toISOString().slice(0, 10)      // e.g. "2025-08-25"
     });
   } catch (err) {
     console.error(err);

@@ -207,10 +207,10 @@ const Home = () => {
 
       // If new month started, refresh calendar and score
       if (res.data.newMonth) {
-        setShowOldCalendar(false);
+        setShowOldCalendar(false);      // <-- Make sure this is set immediately
         setMissingLast25(false);
-        generateCalendar(false);
-        fetchScore();
+        generateCalendar(false);        // <-- Always generate the new calendar
+        fetchScore();                   // <-- Fetch new score and entries
       } else {
         fetchScore();
       }
@@ -246,10 +246,8 @@ const Home = () => {
       const lastDateStr = `${year}-${month}-${day}`;
       const entry = entries.find(e => e.date === lastDateStr);
       if (entry) {
-        setTimeout(() => {
-          setShowOldCalendar(false);
-          generateCalendar(false);
-        }, 60000); // 1 minute
+        setShowOldCalendar(false);      // <-- Immediately hide old calendar
+        generateCalendar(false);        // <-- Show new calendar
       }
     }
   }, [entries, calendarDates, showOldCalendar]);
