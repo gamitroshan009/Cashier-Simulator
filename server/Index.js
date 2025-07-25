@@ -146,7 +146,7 @@ app.post('/api/score/entry', async (req, res) => {
     scoreDoc.score += scoreChange;
     scoreDoc.entries.push({ date, status, rupees: rupeeAmount });
 
-    // If entry is for the 25th, reset score and entries for next month
+    // If entry is for the 25th, remove only previous dates (not the 25th itself)
     const entryDate = new Date(date);
     if (entryDate.getDate() === 25) {
       let shift = scoreDoc.shift;
@@ -155,8 +155,12 @@ app.post('/api/score/entry', async (req, res) => {
         shift = user?.shift || 'parttime';
       }
       scoreDoc.score = shift === 'fulltime' ? 200 : 100;
-      scoreDoc.entries = [];
       scoreDoc.shift = shift;
+
+      // Keep only the 25th entry, remove all before it
+      const entryDateStr = date; // e.g., "2025-07-25"
+      scoreDoc.entries = scoreDoc.entries.filter(entry => entry.date === entryDateStr);
+
       await scoreDoc.save();
       return res.json({
         msg: 'Entry added and new month started',
