@@ -113,7 +113,7 @@ app.get('/api/score/:user', async (req, res) => {
     const startDate = new Date(startYear, startMonth, 26);
     const endDate = new Date(endYear, endMonth, 25);
 
-    // Calculate last month's 25th date string for missingLast25 logic
+    // Calculate last month's 25th date string
     let lastMonth = today.getMonth() - 1;
     let lastYear = today.getFullYear();
     if (lastMonth < 0) {
@@ -122,16 +122,37 @@ app.get('/api/score/:user', async (req, res) => {
     }
     const last25Date = new Date(lastYear, lastMonth, 25);
     const last25Str = `${last25Date.getFullYear()}-${String(last25Date.getMonth() + 1).padStart(2, '0')}-${String(last25Date.getDate()).padStart(2, '0')}`;
+
+    // Transition logic: Only run if today >= 26 and last 25th entry exists and transition not done yet
+    if (today.getDate() >= 26) {
+      const hasLast25 = scoreDoc.entries.some(entry => entry.date === last25Str);
+      // Only transition if last 25th entry exists and there are other old entries
+      if (hasLast25 && scoreDoc.entries.length > 1) {
+        // Get shift from Score or User
+        let shift = scoreDoc.shift;
+        if (!shift) {
+          const user = await User.findOne({ username: scoreDoc.username });
+          shift = user?.shift || 'parttime';
+        }
+        // Reset score according to shift
+        scoreDoc.score = shift === 'fulltime' ? 200 : 100;
+        scoreDoc.shift = shift;
+        // Keep only the last 25th entry
+        scoreDoc.entries = scoreDoc.entries.filter(entry => entry.date === last25Str);
+        await scoreDoc.save();
+      }
+    }
+
+    // Check again for missingLast25 after possible transition
     const hasLast25 = scoreDoc.entries.some(entry => entry.date === last25Str);
 
-    // Always send the correct calendar period
     res.json({
       score: scoreDoc.score,
       entries: scoreDoc.entries,
       shift: scoreDoc.shift,
       missingLast25: !hasLast25,
-      calendarStart: startDate.toISOString().slice(0, 10), // e.g. "2025-07-26"
-      calendarEnd: endDate.toISOString().slice(0, 10)      // e.g. "2025-08-25"
+      calendarStart: startDate.toISOString().slice(0, 10),
+      calendarEnd: endDate.toISOString().slice(0, 10)
     });
   } catch (err) {
     console.error(err);
