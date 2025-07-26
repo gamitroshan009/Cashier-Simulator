@@ -143,14 +143,11 @@ app.get('/api/score/:user', async (req, res) => {
       }
     }
 
-    // Check again for missingLast25 after possible transition
-    const hasLast25 = scoreDoc.entries.some(entry => entry.date === last25Str);
-
+    // No missingLast25 logic, always allow calendar and score to load
     res.json({
       score: scoreDoc.score,
       entries: scoreDoc.entries,
       shift: scoreDoc.shift,
-      missingLast25: !hasLast25,
       calendarStart: startDate.toISOString().slice(0, 10),
       calendarEnd: endDate.toISOString().slice(0, 10)
     });

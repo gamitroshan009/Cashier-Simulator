@@ -14,7 +14,7 @@ const ForgotPassword = () => {
 
   const sendOtp = async () => {
     try {
-      const res = await axios.post('https://cashier-simulator.onrender.com/api/auth/send-otp', { email });
+      const res = await axios.post('http://localhost:5000/api/auth/send-otp', { email });
       if (res.data.success) {
         setMessage('OTP sent to your email.');
         setStep(2);
@@ -26,7 +26,7 @@ const ForgotPassword = () => {
 
   const verifyOtp = async () => {
     try {
-      const res = await axios.post('https://cashier-simulator.onrender.com/api/auth/verify-otp', { email, otp });
+      const res = await axios.post('http://localhost:5000/api/auth/verify-otp', { email, otp });
       if (res.data.success) {
         setMessage('OTP verified. Now set a new password.');
         setStep(3);
@@ -38,7 +38,7 @@ const ForgotPassword = () => {
 
   const resetPassword = async () => {
     try {
-      const res = await axios.post('https://cashier-simulator.onrender.com/api/auth/reset-password', { email, newPassword });
+      const res = await axios.post('http://localhost:5000/api/auth/reset-password', { email, newPassword });
       if (res.data.success) {
         setMessage('Password reset successfully. Please log in.');
         setStep(4);
